@@ -1,0 +1,193 @@
+ME314 2019 Exam
+ID #201873831
+**INSTRUCTIONS:** Answer **four** of the **five** questions.  If you answer five, we will base your grade on the best four of five.  Each of your four best questions is weighted equally in the determination of your overall grade.  (**25 points each**)
+
+
+### Question 1
+
+Using the `Hitters` dataset (from the **ISLR** package), you will be predicting `Salary` based on the other variables in this data set.
+
+```{r}
+data(Hitters, package = "ISLR")
+summary(Hitters)
+
+# just to take look at the data in Hitter data set
+head(Hitters)
+```
+
+
+(a) For each predictor, fit a simple (single-variable) linear regression model to predict the response.  In which of the models is there a statistically significant association between the predictor and the response?
+
+```{r}
+for(i in colnames(Hitters[,-1])) { 
+  model = lm(Salary~Hitters[,i], data=Hitters)
+  names(model$coefficients)[2] = i 
+  summary = summary(model)
+  print(summary)
+}
+
+single_coeff = c(1.2090, 4.3854, 17.671, 7.4161, 7.8337, 9.220, 37.705, 0.10380, 0.38202, 2.8809, 0.7664, 0.79095, 0.83682, -12.88, -173.39, 0.48423, 0.07909, -0.3688, -2.559)
+```
+**Part A**
+*The F-statistic of this model is not near 1 and it has a fairly small p-value, indicating that against the null hypothesis.Looking at each of the p-values associated with each predictor's t-statistic value, I see that there is no statistically significant association for League, Assist, Errors, and NewLeagues*
+(b) Fit a multiple regression model to predict the response using all of the predictors. Describe your results. For which predictors can we reject the null hypothesis $H_0 : \beta_j = 0$?
+```{r}
+#Multiple Regression Model
+lm_modelB = lm(Salary~., data = Hitters)
+summary(lm_modelB)
+##Excludes the Intercept coefficient
+multiple_coeff = coef(lm_modelB)[-1]
+```
+**Part B**
+*We reject the null hypothesis for PutOuts, DivisionW, CWalks, Walks,Hits, and AtBat on the p-values, F-statistic, and p-value of the F-statistic calculated within the model.*
+
+(c) How do your results from (a) compare to your results from (b)? Create a plot displaying the univariate regression coefficients from (a) on the $x$-axis, and the multiple regression coefficients from (b) on the $y$-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regression model is shown on the $x$-axis, and its coefficient estimate in the multiple linear regression model is shown on the $y$-axis.  Hint: To get the coefficients from a fitted regression model, you can use `coef()`.  Note that you are not interested in the intercept.
+```{r}
+multiple_coeff = coef(lm_modelB)[-1]
+single_coeff = c(1.2090, 4.3854, 17.671, 7.4161, 7.8337, 9.220, 37.705, 0.10380, 0.38202, 2.8809, 0.7664, 0.79095, 0.83682, -12.88, -173.39, 0.48423, 0.07909, -0.3688, -2.559)
+plot(x = single_coeff, y = multiple_coeff, main= "Regression Coefficients", col = c("red", "blue"), lwd  =2)
+```
+**Part C**
+*There is high similarity between both the coefficents from the single-variable linear regression models and the multiple regression model except one value which lies far from the other values within the model.*
+
+### Question 2
+Using the `Boston` data set, fit classification models in order to predict whether a given suburb has a crime rate above or below the median.  Produce a confusion matrix for, and describe the findings from your model, for each of:
+
+```{r}
+library(MASS)
+attach(Boston)
+
+crime1 <- rep(0, length(crim)) #this creates a binary varible for crim
+crime1[crim > median(crim)]
+Boston <- data.frame(Boston, crime1)
+
+#logistic regression
+glm.fitB <- glm(crime1 ~ . - crime1 - crim, data = Boston, family = binomial)
+summary(glm.fitB)
+
+glm.probs1 <- predict(glm.fitB, Boston, type = "response")
+glm.pred1 <- rep(0, length(glm.probs1))
+glm.pred1[glm.probs1 > 0.5] <- 1
+table(glm.pred1, crime1)
+
+
+#linear regression
+lm.fitA <- lm(crim ~ crim , data = Boston)
+summary(lm.fitA)
+
+glm.probs2 <- predict(lm.fitA, Boston, type = "response")
+glm.pred2 <- rep(0, length(glm.probs2))
+glm.pred2[glm.probs2 > 0.5] <- 1
+table(glm.pred2, crime1)
+```
+
+a.  linear regression.  What is wrong with this model?
+**Linear Regression Analysis**
+*Linear Regression is used to predict the value of an outcome variable Y based on one or more input predictor varibles X. The purpose is to establish a linear relationship between the predictor varibles and the response variable. However for this particular data set(Boston), the linear regression model does not produce a viable result due to the fact that we are only looking at one variable (crim). If we were looking at more than one varible, this regression model would be more helpful. For example: When we analyzed the Carseat data set, we looked at Advertsing and Price in relation to Sales.*
+*The confusion matrix is telling us about the performance of a classifcaiton model on a test data set which we created of whihch the true values are known. This matrix calculates a whole cross-tablulation of observed and predicted varibles.*
+b.  logistic regression
+**Logistic Regression Analysis**
+*Logistic Regression is used for binary classification. It is an instance of classification technique that you can use to predict a qualitative response. In this data set (Boston), the linear regression model indicates that the varibles are statiscally significant in this model.Addtionally, the fisher scoring iterations indicate the number of interation sto fit the model. For this data set, it is 25.*
+
+**Note:** You do not have to split the data into test and training sets here.  Just predict on the training sample, which consists of the entire dataset.
+
+### Question 3
+(a) Give a standard error for the median of the `indus` variable from `data(Boston, package = "MASS")`.
+
+```{r}
+#Standard Error for the Median
+data(Boston, package = "MASS")
+summary(Boston$indus)
+std.errorMed <- function(x) (1.253*(sd(x)/sqrt(length(x))))
+std.errorMed(Boston$indus)
+```
+
+**Standard Error for the Median**
+*The standard error is the approximate standard deviation of a statistical sample population. The standard error is a statistical term that measures the accuracy with which a sample represents a population. In this instance the variable 'indus' represents the proportion of non-retail business acres per town. And the calculated standard error for the median was 0.3821398, which indicates the the statistical accuracy of an estimate.*
+
+(b) Estimate a bootstrapped standard error for the coefficient of `medv` in a logistic regression model of the above/below median of crime binary variable from question 2, with `medv`, `indus`, `age`, `black`, and `ptratio` as predictors.  Compare this to the asymptotic standard error from the maximum likelihood estimation (reported by `summary.glm()`).
+
+```{r}
+library(boot)
+get.coeffic = function(data, indices){
+  data    = data[indices,]
+  mylogit = glm(crime1~medv +indus +age +black +ptratio, data=data, family="binomial")
+  summary(mylogit)
+  return(coef(mylogit)) 
+}
+
+summary.glm(glm(crime1~medv +indus +age +black +ptratio, data=Boston, family="binomial"))
+##Bootstrap Estimators
+boot(data = Boston, statistic = get.coeffic, R = 1000)
+
+#getting a really long error, could not figure out why
+```
+**Bootstrap**
+*The bootstrap is a flexible and powerful statistical tool that can be used to quantify the uncertainty associated with a given estimator or statistical learning method.I t can provide an estimate of the standard error of a coefficient, or a confidence interval for that coefficient.Estimation of a bootstrapped standard error for the coefficient of `medv` is 2.5%. Which is higher compared to the maximum likelihood estimation.*
+
+
+### Question 4
+
+Using **quanteda**, construct an English language dictionary for "populism" for English, using the word patterns found in Appendix B of [Rooduijn, Matthijs, and Teun Pauwels. 2011. "Measuring Populism: Comparing Two Methods of Content Analysis."  *West European Politics* 34(6): 1272–83.](Populism_2011.pdf)
+
+Use this dictionary to measure the relative amount of populism, as a total of all words in, the `data_corpus_irishbudget2010` when these are grouped by political party.  Hint: You will need to make two dfm objects, one for all words, and one for the dictionary, and get a proportion.  Plot the proportions by party (using any method).
+
+```{r}
+library(readtext)
+library(quanteda)
+
+data("data_corpus_irishbudget2010")
+
+#Dictionary gotten from Table B
+dic = dictionary(list(populism = c("eliit*", "consensus*", "undemocratic*", "referend*", "corrupt*", "propagand*", "politici*", "*deceit*", "*deceiv*","*betray*", "shame*", "scandal*","truth*", "dishonest*", "establishm*", "ruling*")))
+
+#First DFM Object
+object1_data = dfm(data_corpus_irishbudget2010, groups = "party")
+
+#Second DFM Object
+object2_dict = dfm(object1_data , dictionary = dic)
+proportion = ntoken(object2_dict) / ntoken(object1_data)
+
+#Plot of the proportions by Party
+dotchart(proportion, pch = 9 , color = c("purple", "red", "blue", "green", "yellow"))
+
+```
+
+### Question 5
+Here we will use k-means clustering to see if we can produce groupings by party of the 1984 US House of Representatives, based on their voting records from 16 votes.  This data is the object `HouseVotes84` from the `mlbench` package.  Since this is stored as a list of factors, use the following code to transform it into a method that will work with the `kmeans()` function.
+```{r}
+installed.packages("mlbench")
+library("mlbench")
+data(HouseVotes84, package = "mlbench") 
+HouseVotes84num <- as.data.frame(lapply(HouseVotes84[, -1], unclass))
+HouseVotes84num[is.na(HouseVotes84num)] <- 0
+set.seed(2)  # make sure you do this before step b below
+
+#Part B
+kmeans_model1 = kmeans(HouseVotes84num, 2)
+kmeans_model1$cluster[kmeans_model1$cluster == 2]
+kmeans_model1$cluster[kmeans_model1$cluster == 1]
+tab = table(kmeans_model1$cluster, HouseVotes84$Class)
+tab
+accurcy_value =  (tab[1,1] + tab[2,2]) / 435 #0.8689655
+precision_value = tab[1,1]/(tab[1,1] + tab[1,2]) #0.9565217
+recall_value = tab[1,1]/(tab[1,1] + tab[2,1]) #0.82397
+
+#Part C
+kmeans_model1 = kmeans(HouseVotes84num, 2)
+tab = table(kmeans_model1$cluster, HouseVotes84$Class)
+```
+
+a.  What does each line of that code snippet do, and why was this operation needed?  What is the `-1` indexing for?
+**Part A**
+*In regards to indexing, -1 basically excludes the first column since it is what we want to predict within our code. Unclass is an object-oriented style of programming so it turns x and y into 0 and 1.*
+
+b.  Perform a kmeans clustering on the votes only data, for 2 classes, after setting the seed to 2 as per above.  Construct a table comparing the actual membership of the Congressperson's party (you will find this as one of the variables in the `HouseVotes84` data) to the cluster assigned by the kmeans procedure.  Report the 
+    i.   accuracy  
+    ii.  precision  
+    iii.  recall  
+
+c.  Repeat b twice more to produce three more confusion matrix tables, comparing the results.  Are they the same?  If not, why not?
+**Part C**
+*It is the same because set.seed() is present and constant*
+
